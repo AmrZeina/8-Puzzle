@@ -1,4 +1,7 @@
 from collections import deque   #Queue properties
+import heapq
+import time
+from math import sqrt
 
 #Define possible moves in dictionary
 moves = {
@@ -40,9 +43,9 @@ def getChildren(currentState):
 
     return states
 
-"""
+
 def DFS(initialState, goalState):
-    
+    """
     A function called to reach the goal state using Depth First Search.
 
     Args:
@@ -50,18 +53,117 @@ def DFS(initialState, goalState):
         goalState (int) : solution of the buzzle problem
     
     Returns:
+        fornteir (list): list of all stated to be explored
         pathToGoal (list) : List include moves happened from initial to goal 
         pathCost (int) : Cost spent to reach the goal
         nodesExpanded (list) : List include all moves expanded from initial to goal
-        searchDepth (int) 
         runningTime (float) : time in seconds
-    
+        parent (dict) : Track parent for path reconstruction
+    """
+    fronteir = []
+    nodesExpanded = []
+    parent = {initialState: None}
+    runningTime = 0
+    pathCost = 0
+    timeStart = time.time()
+
+    fronteir.append(initialState) #Push initial state
+    while fronteir:
+        state = fronteir.pop()
+        nodesExpanded.append(state)
+
+        if goalState == state:
+            pathToGoal = []
+            while state is not None:
+                pathToGoal.append(state)
+                state = parent[state]
+                pathCost +=1
+            
+            pathToGoal.reverse()
+            runningTime = time.time() - timeStart
+            return pathToGoal, runningTime
+        
+        else:
+            children= getChildren(state)
+            for child,move in children :
+                #Convert list -> string to make it hashable
+                child = ''.join(child)
+                if child not in fronteir and child not in nodesExpanded:
+                    fronteir.append(child)
+                    parent[child] = state
+
 def BFS():
     pass
 
 def IDS():
     pass
 
-def AStar():
-    pass
-"""
+
+def manhattan_distance(state):
+    """Manhattan distance heuristic for 8-puzzle."""
+    distance = 0
+    for i in range(9):
+        tile = int(state[i])
+        if tile != 0:
+            goal_row, goal_col = divmod(tile, 3)
+            current_row, current_col = divmod(i, 3)
+            distance += abs(current_row - goal_row) + abs(current_col - goal_col)
+    return distance
+
+
+def euclidean_distance(state):
+    """Euclidean distance heuristic for 8-puzzle."""
+    distance = 0
+    for i in range(9):
+        tile = int(state[i])
+        if tile != 0:
+            goal_row, goal_col = divmod(tile, 3)
+            current_row, current_col = divmod(i, 3)
+            dx = current_row - goal_row
+            dy = current_col - goal_col
+            distance += sqrt(dx * dx + dy * dy)
+    return distance
+
+def AStar(initialState, goalState="012345678", heuristic="manhattan"):
+    start_time = time.time()
+
+    if isinstance(initialState, int):
+        initialState = str(initialState)
+
+    open_heap = [] 
+    heapq.heappush(open_heap, (0, 0, initialState, []))
+    visited = set()
+    nodesExpanded = 0
+
+    while open_heap:
+        f, g, currentState, path = heapq.heappop(open_heap)
+        if currentState in visited:
+            continue
+        visited.add(currentState)
+        nodesExpanded += 1
+        if currentState == goalState:
+            end_time = time.time()
+            return {
+                "pathToGoal": path,
+                "pathCost": len(path),
+                "nodesExpanded": nodesExpanded,
+                "searchDepth": len(path),
+                "runningTime": round(end_time - start_time, 5)
+            }
+
+        for childState, move in getChildren(currentState):
+            childState = ''.join(childState)   # convert list to string before using it
+            if childState not in visited:
+                g_new = g + 1
+                if heuristic == "manhattan":
+                    h = manhattan_distance(childState)
+                else:
+                    h = euclidean_distance(childState)
+                f_new = g_new + h
+                new_path = path + [move]
+                heapq.heappush(open_heap, (f_new, g_new, childState, new_path))
+    return None
+
+state ="120345678"
+goalState ="012345678"
+print(DFS(state , goalState))
