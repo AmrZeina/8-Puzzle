@@ -3,6 +3,7 @@ import heapq
 import time
 from math import sqrt
 
+
 #Define possible moves in dictionary
 moves = {
     'Up': -3,
@@ -58,7 +59,6 @@ def DFS(initialState, goalState):
         pathCost (int) : Cost spent to reach the goal
         nodesExpanded (list) : List include all moves expanded from initial to goal
         runningTime (float) : time in seconds
-        parent (dict) : Track parent for path reconstruction
     """
     fronteir = []
     nodesExpanded = []
@@ -92,13 +92,133 @@ def DFS(initialState, goalState):
                     fronteir.append(child)
                     parent[child] = state
 
-def BFS():
-    pass
 
-def IDS():
-    pass
+def BFS(initialState ,goalState ):
+    """
+    A function called to reach the goal state using Breadth First Search.
+
+    Args:
+        initialState (int) : the state where searching begin from
+        goalState (int) : solution of the buzzle problem
+    
+    Returns:
+        fornteir (list): list of all stated to be explored "Queue"
+        pathToGoal (list) : List include moves happened from initial to goal 
+        pathCost (int) : Cost spent to reach the goal
+        nodesExpanded (list) : List include all moves expanded from initial to goal
+        runningTime (float) : time in seconds
+    """
+    fronteir = deque()
+    nodesExpanded = []
+    parent = {initialState: None}
+    runningTime = 0
+    pathCost = 0
+    timeStart = time.time()
+
+    fronteir.append(initialState) #enqueue initial state
+    while fronteir:
+        state = fronteir.popleft()
+        nodesExpanded.append(state)
+
+        if goalState == state:
+            pathToGoal = []
+            while state is not None:
+                pathToGoal.append(state)
+                state = parent[state]
+                pathCost +=1
+            
+            pathToGoal.reverse()
+            runningTime = time.time() - timeStart
+            return pathToGoal, runningTime
+        
+        else:
+            children= getChildren(state)
+            for child,move in children :
+                #Convert list -> string to make it hashable
+                child = ''.join(child)
+                if child not in fronteir and child not in nodesExpanded:
+                    fronteir.append(child)
+                    parent[child] = state
 
 
+def DLS(initialState, goalState, limit):
+    """
+    A function called to reach the goal state using Depth First Search with Limit.
+
+    Args:
+        initialState (int) : the state where searching begin from
+        goalState (int) : solution of the buzzle problem
+        limit (int) : the max depth to search at
+    
+    Returns:
+        fornteir (list): list of all stated to be explored
+        pathToGoal (list) : List include moves happened from initial to goal 
+        pathCost (int) : Cost spent to reach the goal
+        nodesExpanded (list) : List include all moves expanded from initial to goal
+        runningTime (float) : time in seconds
+    """
+    if limit < 0:
+        return 
+    #List of tuples to save the level
+    fronteir = []
+    nodesExpanded = []
+    parent = {initialState: None}
+    runningTime = 0
+    pathCost = 0
+    timeStart = time.time()
+    level = 0
+    
+    fronteir.append((initialState,level)) #Push initial state
+    while fronteir:
+        state, level = fronteir.pop()
+        nodesExpanded.append(state)
+        if level <= limit:
+            if goalState == state:
+                pathToGoal = []
+                while state is not None:
+                    pathToGoal.append(state)
+                    state = parent[state]
+                    pathCost +=1
+                
+                pathToGoal.reverse()
+                runningTime = time.time() - timeStart
+                return pathToGoal, runningTime
+            
+            else:
+                if not level == limit:
+                    level +=1
+                    children= getChildren(state)
+                    for child,move in children :
+                        #Convert list -> string to make it hashable
+                        child = ''.join(child)
+                        if child not in fronteir and child not in nodesExpanded:
+                            fronteir.append((child,level))
+                            parent[child] = state
+        else : return None
+
+def IDS(initialState, goalState, maxDepth):
+    """
+    A function called to reach the goal state using Iterative Depth First Search with Increasing Limit.
+
+    Args:
+        initialState (int) : the state where searching begin from
+        goalState (int) : solution of the buzzle problem
+        maxDepth (int) : the max number of iterations
+    
+    Returns:
+        fornteir (list): list of all stated to be explored
+        pathToGoal (list) : List include moves happened from initial to goal 
+        pathCost (int) : Cost spent to reach the goal
+        nodesExpanded (list) : List include all moves expanded from initial to goal
+        runningTime (float) : time in seconds
+    """
+    for iteration in range(maxDepth+1):
+        result = DLS(initialState, goalState, iteration)
+        if result is not None:
+            pathToGoal, RunningTime = result
+            return pathToGoal, RunningTime
+    return None
+            
 def manhattan_distance(state):
     """Manhattan distance heuristic for 8-puzzle."""
     distance = 0
@@ -166,4 +286,4 @@ def AStar(initialState, goalState="012345678", heuristic="manhattan"):
 
 state ="120345678"
 goalState ="012345678"
-print(DFS(state , goalState))
+print(IDS(state , goalState, 1))
