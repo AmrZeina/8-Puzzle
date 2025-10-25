@@ -268,7 +268,7 @@ def AStar(initialState, goalState="012345678", heuristic="manhattan"):
                 "pathCost": len(path),
                 "nodesExpanded": nodesExpanded,
                 "searchDepth": len(path),
-                "runningTime": round(end_time - start_time, 5)
+                "runningTime": format(end_time - start_time, ".5f")
             }
 
         for childState, move in getChildren(currentState):
